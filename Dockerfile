@@ -1,12 +1,19 @@
-FROM alpine:3.13.2
-
-ENV RELEASE="Xray 1.3.1" \
-    UUID="00000000-0000-0000-0000-000000000000"
+FROM alpine:3.13.2 as builder
 
 WORKDIR /opt
 
-COPY . .
+RUN wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip && \
+    unzip Xray-linux-64.zip && \
+    chmod +x xray
 
-RUN chmod +x docker-entrypoint.sh
+FROM alpine:3.13.2
+
+WORKDIR /opt
+
+COPY docker-entrypoint.sh .
+COPY --from=builder /opt/xray /usr/local/bin
+
+RUN apk --no-cache add curl && \
+    chmod +x docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
